@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LuxKickx.in | Streetwear Cool Sneakers </title>
+  <title>LuxKickx.in | Streetwear Cool Sneakers</title>
   <style>
     body {
       margin: 0;
@@ -109,6 +109,36 @@
       width: 100%;
       margin-bottom: 10px;
     }
+
+    /* WhatsApp popup */
+    #whatsappPopup {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #1a1a1a;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      z-index: 2000;
+      width: 300px;
+    }
+    #whatsappPopup h3 {
+      margin-bottom: 15px;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      background: #111;
+      font-size: 0.9em;
+      color: #ccc;
+    }
+    footer a {
+      color: #ff3131;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -126,13 +156,31 @@
     <input type="text" id="price" placeholder="Price (₹)" /><br />
     <input type="text" id="imgUrl" placeholder="Image URL (https://...)" /><br />
     <button onclick="addProduct()">Add Product</button>
+    <hr style="margin:15px 0; border-color:#333;">
+    <h4>💬 WhatsApp Numbers</h4>
+    <input type="text" id="whatsapp1" placeholder="WhatsApp Number 1 (with country code)" /><br />
+    <input type="text" id="whatsapp2" placeholder="WhatsApp Number 2 (with country code)" /><br />
+    <button onclick="saveNumbers()">Save Numbers</button>
   </div>
 
   <div class="product-grid" id="productGrid"></div>
 
+  <!-- WhatsApp choice popup -->
+  <div id="whatsappPopup">
+    <h3>Choose a WhatsApp Number:</h3>
+    <button id="wa1"></button><br /><br />
+    <button id="wa2"></button><br /><br />
+    <button onclick="closePopup()">Cancel</button>
+  </div>
+
+  <footer>
+    Follow us on <a href="https://instagram.com/luxkickx.in" target="_blank">Instagram</a> |
+    <a href="#" id="whatsappFooter">WhatsApp</a>
+  </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBp0TbPZcuc8PQ0Yo7tinuFmczbEA67YcE",
@@ -148,6 +196,7 @@
     const db = getDatabase(app);
     const adminPassword = "QwEr12@#";
     let isAdmin = false;
+    let wa1 = "", wa2 = "";
 
     window.toggleLoginBox = function () {
       const box = document.getElementById("loginBox");
@@ -190,9 +239,7 @@
           <img src="${p.img}" alt="${p.name}" />
           <h3>${p.name}</h3>
           <p>₹${p.price}</p>
-          <a href="https://wa.me/919645360708?text=Hi!%20I'm%20interested%20in%20${encodeURIComponent(p.name)}%20(₹${p.price})" target="_blank">
-            <button>Buy Now</button>
-          </a>
+          <button onclick="openPopup('${encodeURIComponent(p.name)}', '${p.price}')">Buy Now</button>
           ${isAdmin ? `<button onclick="deleteProduct('${id}')">Delete</button>` : ""}
         `;
         grid.appendChild(div);
@@ -204,6 +251,47 @@
       await remove(ref(db, "products/" + id));
       alert("🗑️ Product deleted!");
     };
+
+    // WhatsApp popup logic
+    window.openPopup = function (productName, price) {
+      if (!wa1 && !wa2) return alert("WhatsApp numbers not set by admin yet!");
+      const popup = document.getElementById("whatsappPopup");
+      popup.style.display = "block";
+      document.getElementById("wa1").innerText = wa1 || "Number 1 Not Set";
+      document.getElementById("wa2").innerText = wa2 || "Number 2 Not Set";
+
+      document.getElementById("wa1").onclick = () => {
+        window.open(`https://wa.me/${wa1}?text=Hi!%20I'm%20interested%20in%20${productName}%20(₹${price})`, "_blank");
+        closePopup();
+      };
+      document.getElementById("wa2").onclick = () => {
+        window.open(`https://wa.me/${wa2}?text=Hi!%20I'm%20interested%20in%20${productName}%20(₹${price})`, "_blank");
+        closePopup();
+      };
+    };
+
+    window.closePopup = function () {
+      document.getElementById("whatsappPopup").style.display = "none";
+    };
+
+    // Save WhatsApp numbers
+    window.saveNumbers = async function () {
+      const num1 = document.getElementById("whatsapp1").value.trim();
+      const num2 = document.getElementById("whatsapp2").value.trim();
+      await set(ref(db, "whatsapp"), { num1, num2 });
+      alert("✅ WhatsApp numbers saved!");
+    };
+
+    // Load saved numbers
+    onValue(ref(db, "whatsapp"), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        wa1 = data.num1 || "";
+        wa2 = data.num2 || "";
+        document.getElementById("whatsapp1").value = wa1;
+        document.getElementById("whatsapp2").value = wa2;
+      }
+    });
   </script>
 </body>
 </html>
