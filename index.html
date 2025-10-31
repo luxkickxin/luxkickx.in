@@ -74,8 +74,6 @@
       border-radius: 8px;
       border: none;
     }
-
-    /* Floating Admin Login */
     #loginButton {
       position: fixed;
       bottom: 20px;
@@ -91,9 +89,7 @@
       transition: 0.3s;
       z-index: 999;
     }
-    #loginButton:hover {
-      background: #ff4f4f;
-    }
+    #loginButton:hover { background: #ff4f4f; }
     #loginBox {
       display: none;
       position: fixed;
@@ -105,14 +101,33 @@
       box-shadow: 0 0 10px rgba(255,255,255,0.2);
       z-index: 1000;
     }
-    #loginBox input {
-      width: 100%;
-      margin-bottom: 10px;
+    #loginBox input { width: 100%; margin-bottom: 10px; }
+
+    /* Floating Custom Button */
+    #customButton {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: linear-gradient(90deg,#00ff7f,#00ffaa);
+      color: #000;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0,255,127,0.5);
+      transition: 0.3s;
+      z-index: 998;
+      display: none;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 10px rgba(0,255,127,0.3); }
+      50% { box-shadow: 0 0 25px rgba(0,255,127,0.7); }
+      100% { box-shadow: 0 0 10px rgba(0,255,127,0.3); }
     }
 
-    /* WhatsApp popup */
-    #whatsappPopup {
-      display: none;
+    .whatsapp-box {
       position: fixed;
       top: 50%;
       left: 50%;
@@ -121,66 +136,71 @@
       padding: 20px;
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(255,255,255,0.2);
-      z-index: 2000;
-      width: 300px;
+      display: none;
+      z-index: 1001;
     }
-    #whatsappPopup h3 {
-      margin-bottom: 15px;
+    .whatsapp-box button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      background: #25d366;
+      color: #fff;
     }
-
-    footer {
-      margin-top: 40px;
-      padding: 20px;
-      background: #111;
-      font-size: 0.9em;
-      color: #ccc;
-    }
-    footer a {
-      color: #ff3131;
-      text-decoration: none;
+    .close-btn {
+      background: #ff3131;
+      color: white;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
   <header>LuxKickx.in</header>
 
+  <!-- Admin Login -->
   <button id="loginButton" onclick="toggleLoginBox()">Admin</button>
   <div id="loginBox">
     <input type="password" id="adminPass" placeholder="Enter Password" />
     <button onclick="checkPassword()">Login</button>
   </div>
 
+  <!-- Admin Panel -->
   <div id="adminPanel">
     <h3>🧠 Admin Panel</h3>
     <input type="text" id="name" placeholder="Product Name" /><br />
     <input type="text" id="price" placeholder="Price (₹)" /><br />
-    <input type="text" id="imgUrl" placeholder="Image URL (https://...)" /><br />
+    <input type="text" id="imgUrl" placeholder="Image URL" /><br />
     <button onclick="addProduct()">Add Product</button>
+
     <hr style="margin:15px 0; border-color:#333;">
-    <h4>💬 WhatsApp Numbers</h4>
-    <input type="text" id="whatsapp1" placeholder="WhatsApp Number 1 (with country code)" /><br />
-    <input type="text" id="whatsapp2" placeholder="WhatsApp Number 2 (with country code)" /><br />
-    <button onclick="saveNumbers()">Save Numbers</button>
+    <h4>📞 WhatsApp Numbers</h4>
+    <input type="text" id="whatsapp1" placeholder="WhatsApp 1" /><br />
+    <input type="text" id="whatsapp2" placeholder="WhatsApp 2" /><br />
+    <button onclick="saveWhatsApp()">Save Numbers</button>
+
+    <hr style="margin:15px 0; border-color:#333;">
+    <h4>🎯 Floating Button</h4>
+    <input type="text" id="btnName" placeholder="Button Text" /><br />
+    <input type="text" id="btnLink" placeholder="Button Link" /><br />
+    <button onclick="saveButton()">Save Button</button>
+    <button style="background:#444;" onclick="removeButton()">Remove Button</button>
+  </div>
+
+  <!-- Floating Button -->
+  <button id="customButton">🎡 Spin & Win</button>
+
+  <!-- WhatsApp Selection Box -->
+  <div class="whatsapp-box" id="whatsappBox">
+    <h3>📩 Choose a Seller</h3>
+    <button id="chat1">Seller 1</button>
+    <button id="chat2">Seller 2</button>
+    <button class="close-btn" onclick="closeWhatsAppBox()">Close</button>
   </div>
 
   <div class="product-grid" id="productGrid"></div>
 
-  <!-- WhatsApp choice popup -->
-  <div id="whatsappPopup">
-    <h3>Choose a WhatsApp Number:</h3>
-    <button id="wa1"></button><br /><br />
-    <button id="wa2"></button><br /><br />
-    <button onclick="closePopup()">Cancel</button>
-  </div>
-
-  <footer>
-    Follow us on <a href="https://instagram.com/luxkickx.in" target="_blank">Instagram</a> |
-    <a href="#" id="whatsappFooter">WhatsApp</a>
-  </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBp0TbPZcuc8PQ0Yo7tinuFmczbEA67YcE",
@@ -196,7 +216,8 @@
     const db = getDatabase(app);
     const adminPassword = "QwEr12@#";
     let isAdmin = false;
-    let wa1 = "", wa2 = "";
+    let whatsapp1 = "";
+    let whatsapp2 = "";
 
     window.toggleLoginBox = function () {
       const box = document.getElementById("loginBox");
@@ -219,13 +240,56 @@
       const name = document.getElementById("name").value.trim();
       const price = document.getElementById("price").value.trim();
       const imgUrl = document.getElementById("imgUrl").value.trim();
-      if (!name || !price || !imgUrl) return alert("Please fill all fields with a valid image URL");
-      await push(ref(db, "products"), { name, price, img: imgUrl, time: Date.now() });
-      document.getElementById("name").value = "";
-      document.getElementById("price").value = "";
-      document.getElementById("imgUrl").value = "";
-      alert("✅ Product added successfully!");
+      if (!name || !price || !imgUrl) return alert("Please fill all fields!");
+      await push(ref(db, "products"), { name, price, img: imgUrl });
+      alert("✅ Product added!");
     };
+
+    window.saveWhatsApp = async function () {
+      const w1 = document.getElementById("whatsapp1").value.trim();
+      const w2 = document.getElementById("whatsapp2").value.trim();
+      if (!w1 || !w2) return alert("Enter both numbers!");
+      await set(ref(db, "whatsapp"), { w1, w2 });
+      alert("✅ Numbers saved!");
+    };
+
+    window.saveButton = async function () {
+      const name = document.getElementById("btnName").value.trim();
+      const link = document.getElementById("btnLink").value.trim();
+      if (!name || !link) return alert("Fill both fields!");
+      await set(ref(db, "customButton"), { name, link });
+      alert("✅ Button saved!");
+    };
+
+    // 🚀 NEW FEATURE: Remove Floating Button
+    window.removeButton = async function () {
+      await remove(ref(db, "customButton"));
+      alert("🗑️ Floating button removed!");
+    };
+
+    onValue(ref(db, "customButton"), (snapshot) => {
+      const data = snapshot.val();
+      const btn = document.getElementById("customButton");
+      if (data && data.name && data.link) {
+        btn.innerText = data.name;
+        btn.style.display = "block";
+        btn.onclick = () => window.open(data.link, "_blank");
+        document.getElementById("btnName").value = data.name;
+        document.getElementById("btnLink").value = data.link;
+      } else {
+        btn.style.display = "none";
+      }
+    });
+
+    onValue(ref(db, "whatsapp"), (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        whatsapp1 = data.w1;
+        whatsapp2 = data.w2;
+        document.getElementById("whatsapp1").value = data.w1;
+        document.getElementById("whatsapp2").value = data.w2;
+      }
+    });
 
     const grid = document.getElementById("productGrid");
     onValue(ref(db, "products"), (snapshot) => {
@@ -239,59 +303,28 @@
           <img src="${p.img}" alt="${p.name}" />
           <h3>${p.name}</h3>
           <p>₹${p.price}</p>
-          <button onclick="openPopup('${encodeURIComponent(p.name)}', '${p.price}')">Buy Now</button>
+          <button onclick="showWhatsAppBox('${p.name}','${p.price}')">Buy Now</button>
           ${isAdmin ? `<button onclick="deleteProduct('${id}')">Delete</button>` : ""}
         `;
         grid.appendChild(div);
       });
     });
 
+    window.showWhatsAppBox = function (name, price) {
+      const box = document.getElementById("whatsappBox");
+      const msg = `Hi! I'm interested in ${name} (₹${price})`;
+      document.getElementById("chat1").onclick = () => window.open(`https://wa.me/${whatsapp1}?text=${encodeURIComponent(msg)}`, "_blank");
+      document.getElementById("chat2").onclick = () => window.open(`https://wa.me/${whatsapp2}?text=${encodeURIComponent(msg)}`, "_blank");
+      box.style.display = "block";
+    };
+    window.closeWhatsAppBox = function () {
+      document.getElementById("whatsappBox").style.display = "none";
+    };
     window.deleteProduct = async function (id) {
-      if (!isAdmin) return alert("Only admin can delete");
+      if (!isAdmin) return;
       await remove(ref(db, "products/" + id));
       alert("🗑️ Product deleted!");
     };
-
-    // WhatsApp popup logic
-    window.openPopup = function (productName, price) {
-      if (!wa1 && !wa2) return alert("WhatsApp numbers not set by admin yet!");
-      const popup = document.getElementById("whatsappPopup");
-      popup.style.display = "block";
-      document.getElementById("wa1").innerText = wa1 || "Number 1 Not Set";
-      document.getElementById("wa2").innerText = wa2 || "Number 2 Not Set";
-
-      document.getElementById("wa1").onclick = () => {
-        window.open(`https://wa.me/${wa1}?text=Hi!%20I'm%20interested%20in%20${productName}%20(₹${price})`, "_blank");
-        closePopup();
-      };
-      document.getElementById("wa2").onclick = () => {
-        window.open(`https://wa.me/${wa2}?text=Hi!%20I'm%20interested%20in%20${productName}%20(₹${price})`, "_blank");
-        closePopup();
-      };
-    };
-
-    window.closePopup = function () {
-      document.getElementById("whatsappPopup").style.display = "none";
-    };
-
-    // Save WhatsApp numbers
-    window.saveNumbers = async function () {
-      const num1 = document.getElementById("whatsapp1").value.trim();
-      const num2 = document.getElementById("whatsapp2").value.trim();
-      await set(ref(db, "whatsapp"), { num1, num2 });
-      alert("✅ WhatsApp numbers saved!");
-    };
-
-    // Load saved numbers
-    onValue(ref(db, "whatsapp"), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        wa1 = data.num1 || "";
-        wa2 = data.num2 || "";
-        document.getElementById("whatsapp1").value = wa1;
-        document.getElementById("whatsapp2").value = wa2;
-      }
-    });
   </script>
 </body>
 </html>
