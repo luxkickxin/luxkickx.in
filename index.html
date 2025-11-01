@@ -198,133 +198,168 @@
 
   <div class="product-grid" id="productGrid"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, push, onValue, remove, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    const firebaseConfig = {
-  apiKey: "AIzaSyDEb5rU6umecMHMd5aEO6G41aTzH6BWG18",
-  authDomain: "luxkickx-f4f03.firebaseapp.com",
-  databaseURL: "https://luxkickx-f4f03-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "luxkickx-f4f03",
-  storageBucket: "luxkickx-f4f03.firebasestorage.app",
-  messagingSenderId: "554109408927",
-  appId: "1:554109408927:web:7b034875717703c262f4aa"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyDEb5rU6umecMHMd5aEO6G41aTzH6BWG18",
+    authDomain: "luxkickx-f4f03.firebaseapp.com",
+    databaseURL: "https://luxkickx-f4f03-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "luxkickx-f4f03",
+    storageBucket: "luxkickx-f4f03.firebasestorage.app",
+    messagingSenderId: "554109408927",
+    appId: "1:554109408927:web:7b034875717703c262f4aa"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const adminPassword = "QwEr12@#";
-    let isAdmin = false;
-    let whatsapp1 = "";
-    let whatsapp2 = "";
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const adminPassword = "QwEr12@#";
+  let isAdmin = false;
+  let whatsapp1 = "";
+  let whatsapp2 = "";
 
-    window.toggleLoginBox = function () {
-      const box = document.getElementById("loginBox");
-      box.style.display = box.style.display === "block" ? "none" : "block";
-    };
+  window.toggleLoginBox = function () {
+    const box = document.getElementById("loginBox");
+    box.style.display = box.style.display === "block" ? "none" : "block";
+  };
 
-    window.checkPassword = function () {
-      const pass = document.getElementById("adminPass").value;
-      if (pass === adminPassword) {
-        isAdmin = true;
-        document.getElementById("loginButton").style.display = "none";
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-      } else {
-        alert("❌ Wrong password!");
-      }
-    };
+  window.checkPassword = function () {
+    const pass = document.getElementById("adminPass").value;
+    if (pass === adminPassword) {
+      isAdmin = true;
+      document.getElementById("loginButton").style.display = "none";
+      document.getElementById("loginBox").style.display = "none";
+      document.getElementById("adminPanel").style.display = "block";
+    } else {
+      alert("❌ Wrong password!");
+    }
+  };
 
-    window.addProduct = async function () {
-      const name = document.getElementById("name").value.trim();
-      const price = document.getElementById("price").value.trim();
-      const imgUrl = document.getElementById("imgUrl").value.trim();
-      if (!name || !price || !imgUrl) return alert("Please fill all fields!");
-      await push(ref(db, "products"), { name, price, img: imgUrl });
-      alert("✅ Product added!");
-    };
+  window.addProduct = async function () {
+    const name = document.getElementById("name").value.trim();
+    const price = document.getElementById("price").value.trim();
+    const imgUrl = document.getElementById("imgUrl").value.trim();
+    if (!name || !price || !imgUrl) return alert("Please fill all fields!");
+    await push(ref(db, "products"), { name, price, img: imgUrl });
+    alert("✅ Product added!");
+  };
 
-    window.saveWhatsApp = async function () {
-      const w1 = document.getElementById("whatsapp1").value.trim();
-      const w2 = document.getElementById("whatsapp2").value.trim();
-      if (!w1 || !w2) return alert("Enter both numbers!");
-      await set(ref(db, "whatsapp"), { w1, w2 });
-      alert("✅ Numbers saved!");
-    };
+  window.saveWhatsApp = async function () {
+    const w1 = document.getElementById("whatsapp1").value.trim();
+    const w2 = document.getElementById("whatsapp2").value.trim();
+    if (!w1 || !w2) return alert("Enter both numbers!");
+    await set(ref(db, "whatsapp"), { w1, w2 });
+    alert("✅ Numbers saved!");
+  };
 
-    window.saveButton = async function () {
-      const name = document.getElementById("btnName").value.trim();
-      const link = document.getElementById("btnLink").value.trim();
-      if (!name || !link) return alert("Fill both fields!");
-      await set(ref(db, "customButton"), { name, link });
-      alert("✅ Button saved!");
-    };
+  window.saveButton = async function () {
+    const name = document.getElementById("btnName").value.trim();
+    const link = document.getElementById("btnLink").value.trim();
+    if (!name || !link) return alert("Fill both fields!");
+    await set(ref(db, "customButton"), { name, link });
+    alert("✅ Button saved!");
+  };
 
-    // 🚀 NEW FEATURE: Remove Floating Button
-    window.removeButton = async function () {
-      await remove(ref(db, "customButton"));
-      alert("🗑️ Floating button removed!");
-    };
+  window.removeButton = async function () {
+    await remove(ref(db, "customButton"));
+    alert("🗑️ Floating button removed!");
+  };
 
-    onValue(ref(db, "customButton"), (snapshot) => {
-      const data = snapshot.val();
-      const btn = document.getElementById("customButton");
-      if (data && data.name && data.link) {
-        btn.innerText = data.name;
-        btn.style.display = "block";
-        btn.onclick = () => window.open(data.link, "_blank");
-        document.getElementById("btnName").value = data.name;
-        document.getElementById("btnLink").value = data.link;
-      } else {
-        btn.style.display = "none";
-      }
+  onValue(ref(db, "customButton"), (snapshot) => {
+    const data = snapshot.val();
+    const btn = document.getElementById("customButton");
+    if (data && data.name && data.link) {
+      btn.innerText = data.name;
+      btn.style.display = "block";
+      btn.onclick = () => window.open(data.link, "_blank");
+      document.getElementById("btnName").value = data.name;
+      document.getElementById("btnLink").value = data.link;
+    } else {
+      btn.style.display = "none";
+    }
+  });
+
+  onValue(ref(db, "whatsapp"), (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      whatsapp1 = data.w1;
+      whatsapp2 = data.w2;
+      document.getElementById("whatsapp1").value = data.w1;
+      document.getElementById("whatsapp2").value = data.w2;
+    }
+  });
+
+  const grid = document.getElementById("productGrid");
+  onValue(ref(db, "products"), (snapshot) => {
+    grid.innerHTML = "";
+    snapshot.forEach((child) => {
+      const p = child.val();
+      const id = child.key;
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img src="${p.img}" alt="${p.name}" />
+        <h3>${p.name}</h3>
+        <p>₹${p.price}</p>
+        <button onclick="showWhatsAppBox('${p.name}','${p.price}')">Buy Now</button>
+        ${
+          isAdmin
+            ? `<button onclick="editProduct('${id}','${p.name}','${p.price}','${p.img}')">Edit</button>
+               <button onclick="deleteProduct('${id}')">Delete</button>`
+            : ""
+        }
+      `;
+      grid.appendChild(div);
     });
+  });
 
-    onValue(ref(db, "whatsapp"), (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        whatsapp1 = data.w1;
-        whatsapp2 = data.w2;
-        document.getElementById("whatsapp1").value = data.w1;
-        document.getElementById("whatsapp2").value = data.w2;
-      }
-    });
+  window.editProduct = function (id, name, price, img) {
+    const div = [...document.querySelectorAll(".product")].find(d =>
+      d.innerHTML.includes(`deleteProduct('${id}')`)
+    );
+    if (!div) return;
+    div.innerHTML = `
+      <input type="text" id="editName" value="${name}" placeholder="Product Name" /><br>
+      <input type="text" id="editPrice" value="${price}" placeholder="Price" /><br>
+      <input type="text" id="editImg" value="${img}" placeholder="Image URL" /><br>
+      <button onclick="saveEdit('${id}')">Save</button>
+      <button onclick="cancelEdit()">Cancel</button>
+    `;
+  };
 
-    const grid = document.getElementById("productGrid");
-    onValue(ref(db, "products"), (snapshot) => {
-      grid.innerHTML = "";
-      snapshot.forEach((child) => {
-        const p = child.val();
-        const id = child.key;
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `
-          <img src="${p.img}" alt="${p.name}" />
-          <h3>${p.name}</h3>
-          <p>₹${p.price}</p>
-          <button onclick="showWhatsAppBox('${p.name}','${p.price}')">Buy Now</button>
-          ${isAdmin ? `<button onclick="deleteProduct('${id}')">Delete</button>` : ""}
-        `;
-        grid.appendChild(div);
-      });
-    });
+  window.saveEdit = async function (id) {
+    const name = document.getElementById("editName").value.trim();
+    const price = document.getElementById("editPrice").value.trim();
+    const img = document.getElementById("editImg").value.trim();
+    if (!name || !price || !img) return alert("Please fill all fields!");
+    await update(ref(db, "products/" + id), { name, price, img });
+    alert("✅ Product updated!");
+  };
 
-    window.showWhatsAppBox = function (name, price) {
-      const box = document.getElementById("whatsappBox");
-      const msg = `Hi! I'm interested in ${name} (₹${price})`;
-      document.getElementById("chat1").onclick = () => window.open(`https://wa.me/${whatsapp1}?text=${encodeURIComponent(msg)}`, "_blank");
-      document.getElementById("chat2").onclick = () => window.open(`https://wa.me/${whatsapp2}?text=${encodeURIComponent(msg)}`, "_blank");
-      box.style.display = "block";
-    };
-    window.closeWhatsAppBox = function () {
-      document.getElementById("whatsappBox").style.display = "none";
-    };
-    window.deleteProduct = async function (id) {
-      if (!isAdmin) return;
-      await remove(ref(db, "products/" + id));
-      alert("🗑️ Product deleted!");
-    };
-  </script>
+  window.cancelEdit = function () {
+    location.reload();
+  };
+
+  window.showWhatsAppBox = function (name, price) {
+    const box = document.getElementById("whatsappBox");
+    const msg = `Hi! I'm interested in ${name} (₹${price})`;
+    document.getElementById("chat1").onclick = () => window.open(`https://wa.me/${whatsapp1}?text=${encodeURIComponent(msg)}`, "_blank");
+    document.getElementById("chat2").onclick = () => window.open(`https://wa.me/${whatsapp2}?text=${encodeURIComponent(msg)}`, "_blank");
+    box.style.display = "block";
+  };
+
+  window.closeWhatsAppBox = function () {
+    document.getElementById("whatsappBox").style.display = "none";
+  };
+
+  window.deleteProduct = async function (id) {
+    if (!isAdmin) return;
+    await remove(ref(db, "products/" + id));
+    alert("🗑️ Product deleted!");
+  };
+</script>
+
 </body>
 </html>
+
