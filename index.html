@@ -15,7 +15,6 @@
       min-height: 100vh;
     }
 
-    /* Overlay for readability */
     .overlay {
       position: fixed;
       top: 0;
@@ -37,11 +36,12 @@
       box-shadow: 0 0 15px rgba(255,255,255,0.2);
     }
 
+    /* ⭐ Mobile Friendly Grid (UPDATED) */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      padding: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 15px;
     }
 
     .product {
@@ -131,7 +131,6 @@
 
     #loginBox input { width: 100%; margin-bottom: 10px; }
 
-    /* Floating Custom Button */
     #customButton {
       position: fixed;
       bottom: 20px;
@@ -188,14 +187,13 @@
   <div class="overlay"></div>
   <header>LuxKickx.in</header>
 
-  <!-- Admin Login -->
   <button id="loginButton" onclick="toggleLoginBox()">Admin</button>
+
   <div id="loginBox">
     <input type="password" id="adminPass" placeholder="Enter Password" />
     <button onclick="checkPassword()">Login</button>
   </div>
 
-  <!-- Admin Panel -->
   <div id="adminPanel">
     <h3>🧠 Admin Panel</h3>
     <input type="text" id="name" placeholder="Product Name" /><br />
@@ -203,13 +201,13 @@
     <input type="text" id="imgUrl" placeholder="Image URL" /><br />
     <button onclick="addProduct()">Add Product</button>
 
-    <hr style="margin:15px 0; border-color:#333;">
+    <hr>
     <h4>📞 WhatsApp Numbers</h4>
     <input type="text" id="whatsapp1" placeholder="WhatsApp 1" /><br />
     <input type="text" id="whatsapp2" placeholder="WhatsApp 2" /><br />
     <button onclick="saveWhatsApp()">Save Numbers</button>
 
-    <hr style="margin:15px 0; border-color:#333;">
+    <hr>
     <h4>🎯 Floating Button</h4>
     <input type="text" id="btnName" placeholder="Button Text" /><br />
     <input type="text" id="btnLink" placeholder="Button Link" /><br />
@@ -217,10 +215,8 @@
     <button style="background:#444;" onclick="removeButton()">Remove Button</button>
   </div>
 
-  <!-- Floating Button -->
   <button id="customButton">🎡 Spin & Win</button>
 
-  <!-- WhatsApp Selection Box -->
   <div class="whatsapp-box" id="whatsappBox">
     <h3>📩 Choose a Seller</h3>
     <button id="chat1">Seller 1</button>
