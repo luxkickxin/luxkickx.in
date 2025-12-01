@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LuxKickx Monitor</title>
+  <style>
+    :root{--bg:#0f1724;--card:#111827;--muted:#94a3b8;--accent:#ff5252}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Poppins",sans-serif;background:linear-gradient(180deg,#071022 0%, #0f1724 100%);color:#fff;min-height:100vh}
+    .wrap{max-width:980px;margin:28px auto;padding:18px}
+    header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+    header h1{font-size:20px;margin:0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6)}
+    .big{font-size:34px;font-weight:700;margin:6px 0}
+    .muted{color:var(--muted);font-size:13px}
+    .list{margin-top:10px;max-height:320px;overflow:auto;padding-right:6px}
+    .product-row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);margin-bottom:8px}
+    .product-row img{width:56px;height:56px;object-fit:cover;border-radius:8px}
+    .meta{flex:1}
+    .meta b{display:block}
+    .small-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 8px;border-radius:8px;color:#fff;font-size:13px;cursor:pointer}
+    footer{margin-top:18px;color:var(--muted);font-size:13px;text-align:center}
+    .status-up{color:#4ade80}
+    .status-down{color:#fb7185}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .chip{background:#0b1220;padding:6px 10px;border-radius:999px;font-size:13px;border:1px solid rgba(255,255,255,0.02)}
+    @media (max-width:420px){.big{font-size:28px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="https://via.placeholder.com/48x48/ff5252/ffffff?text=L" alt="logo" style="width:44px;height:44px;border-radius:8px;object-fit:cover"/>
+      <div>
+        <h1>LuxKickx Monitor</h1>
+        <div class="muted">Live product & uptime monitor dashboard</div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="chip" id="productCountChip">Products: —</div>
+      <div class="chip" id="lastUpdateChip">Last update: —</div>
+      <div class="chip" id="lastAddedChip">Latest: —</div>
+      <div class="chip" id="uptimeChip">Site: —</div>
+      <button class="small-btn" id="refreshBtn">Refresh now</button>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="muted">Total Products</div>
+        <div class="big" id="totalProducts">—</div>
+        <div class="muted">Live count from Realtime Database</div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Site Status</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+          <div id="siteStatus" class="muted">—</div>
+          <div class="muted" id="responseTime">—</div>
+        </div>
+        <div style="margin-top:10px" class="muted">Ping checks every 15s (attempts fetch)</div>
+      </div>
+
+      <div class="card">
+        <div class="muted">Latest Product</div>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:8px">
+          <img id="latestImg" src="https://via.placeholder.com/120x120?text=…" width="80" height="80" style="border-radius:8px;object-fit:cover"/>
+          <div>
+            <div id="latestName"><b>—</b></div>
+            <div id="latestPrice" class="muted">—</div>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="muted">Click a product to open in new tab (if you host actual site)</div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div class="muted">All Products (live)</div>
+          <div class="muted">Auto update every 15s</div>
+        </div>
+
+        <div class="list" id="productList">
+          <!-- rows injected here -->
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="muted">Deploy: GitHub Pages / Netlify. Make sure Realtime DB rules allow read from this app.</div>
+    </footer>
+  </div>
+
+  <!-- Firebase + Monitor logic -->
+  <script type="module">
+    // ======= CONFIGURE these =======
+    const mainSiteUrl = "https://luxkickx-f4f03.web.app"; // <-- change to your site public URL
+    const pingIntervalMs = 15000; // 15s
+    // ==============================
+
+    // Firebase config - same as your site (read-only)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDEb5rU6umecMHMd5aEO6G41aTzH6BWG18",
+      authDomain: "luxkickx-f4f03.firebaseapp.com",
+      databaseURL: "https://luxkickx-f4f03-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "luxkickx-f4f03",
+      storageBucket: "luxkickx-f4f03.firebasestorage.app",
+      messagingSenderId: "554109408927",
+      appId: "1:554109408927:web:7b034875717703c262f4aa"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // UI refs
+    const totalProductsEl = document.getElementById("totalProducts");
+    const productCountChip = document.getElementById("productCountChip");
+    const lastUpdateChip = document.getElementById("lastUpdateChip");
+    const lastAddedChip = document.getElementById("lastAddedChip");
+    const productListEl = document.getElementById("productList");
+    const latestImg = document.getElementById("latestImg");
+    const latestName = document.getElementById("latestName");
+    const latestPrice = document.getElementById("latestPrice");
+    const siteStatus = document.getElementById("siteStatus");
+    const responseTimeEl = document.getElementById("responseTime");
+    const uptimeChip = document.getElementById("uptimeChip");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    // Helpers
+    function formatTime(ts) {
+      if (!ts) return "—";
+      const d = new Date(ts);
+      return d.toLocaleString();
+    }
+
+    // Listen to products path
+    const productsRef = ref(db, "products");
+    let lastSnapshotTime = null;
+
+    onValue(productsRef, (snapshot) => {
+      const data = snapshot.val();
+      const keys = data ? Object.keys(data) : [];
+      const count = keys.length;
+      totalProductsEl.innerText = count;
+      productCountChip.innerText = `Products: ${count}`;
+
+      // last update approximation:
+      lastSnapshotTime = Date.now();
+      lastUpdateChip.innerText = `Last update: ${formatTime(lastSnapshotTime)}`;
+
+      // build list and find latest by key (Firebase push keys are chronological)
+      productListEl.innerHTML = "";
+      let latest = null;
+      keys.forEach(k => {
+        const p = data[k];
+        // append row
+        const row = document.createElement("div");
+        row.className = "product-row";
+        row.innerHTML = `
+          <img src="${p.img || 'https://via.placeholder.com/120'}" alt="">
+          <div class="meta">
+            <b>${p.name || "—"}</b>
+            <div class="muted">₹${p.price || "—"}</div>
+          </div>
+          <button class="small-btn open-btn" data-key="${k}">Open</button>
+        `;
+        productListEl.prepend(row); // newest first-ish
+        if (!latest) latest = { key: k, item: p };
+      });
+
+      if (latest) {
+        latestImg.src = latest.item.img || "https://via.placeholder.com/120";
+        latestName.innerHTML = `<b>${latest.item.name || "—"}</b>`;
+        latestPrice.innerText = `₹${latest.item.price || "—"}`;
+        lastAddedChip.innerText = `Latest: ${latest.item.name || "—"}`;
+      } else {
+        latestImg.src = "https://via.placeholder.com/120?text=No+Products";
+        latestName.innerHTML = `<b>—</b>`;
+        latestPrice.innerText = `—`;
+        lastAddedChip.innerText = `Latest: —`;
+      }
+
+      // attach open button handlers
+      document.querySelectorAll(".open-btn").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          // open main site product page if you have product-specific route
+          // fallback: open main site root
+          window.open(mainSiteUrl, "_blank");
+        };
+      });
+    });
+
+    // --- Site ping / uptime check ---
+    async function pingSite() {
+      const start = performance.now();
+      try {
+        // try fetch with no-cors fallback; sometimes CORS blocks, so we handle errors
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 7000);
+
+        // Try a HEAD request first (some hosts block HEAD)
+        const res = await fetch(mainSiteUrl, { method: "GET", cache: "no-store", signal: controller.signal });
+        clearTimeout(timeout);
+        const ms = Math.round(performance.now() - start);
+        responseTimeEl.innerText = `${ms} ms`;
+        siteStatus.className = "status-up";
+        siteStatus.innerText = "UP";
+        uptimeChip.innerText = `Site: UP (${ms} ms)`;
+      } catch (err) {
+        responseTimeEl.innerText = `—`;
+        siteStatus.className = "status-down";
+        siteStatus.innerText = "DOWN / Unreachable";
+        uptimeChip.innerText = `Site: DOWN`;
+      }
+    }
+
+    // initial ping + interval
+    pingSite();
+    const pingTimer = setInterval(pingSite, pingIntervalMs);
+
+    // manual refresh
+    refreshBtn.onclick = () => {
+      // re-run ping and show instant DB refresh already live via onValue
+      pingSite();
+      // flash UI
+      refreshBtn.innerText = "Refreshing...";
+      setTimeout(()=> refreshBtn.innerText = "Refresh now", 900);
+    };
+
+    // tidy: stop interval on unload
+    window.addEventListener("beforeunload", () => clearInterval(pingTimer));
+  </script>
+</body>
+</html>
