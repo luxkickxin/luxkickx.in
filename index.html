@@ -1,306 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LuxKickx.in | Streetwear Cool Sneakers</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Poppins", sans-serif;
-      background: url('wallpaper.png') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
-      min-height: 100vh;
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px);
-      z-index: -1;
-    }
-
-    header {
-      background: rgba(0, 0, 0, 0.8);
-      padding: 15px 0;
-      font-size: 1.8em;
-      font-weight: bold;
-      color: #fff;
-      letter-spacing: 1px;
-      box-shadow: 0 0 15px rgba(255,255,255,0.2);
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-      gap: 15px;
-      padding: 15px;
-    }
-
-    .product {
-      background: rgba(27, 27, 27, 0.8);
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.1);
-      transition: 0.3s;
-    }
-
-    .product:hover {
-      transform: scale(1.03);
-      box-shadow: 0 0 15px rgba(255,255,255,0.2);
-    }
-
-    .product img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      background: #111;
-    }
-
-    button {
-      background: #ff3131;
-      color: white;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 1em;
-      margin-top: 10px;
-      transition: 0.3s;
-    }
-
-    button:hover { background: #ff4f4f; }
-
-    #adminPanel {
-      display: none;
-      background: rgba(17,17,17,0.9);
-      padding: 20px;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 400px;
-      margin: 20px auto;
-      box-shadow: 0 0 20px rgba(255,255,255,0.2);
-    }
-
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: none;
-    }
-
-    #loginButton {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #ff3131;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 30px;
-      font-size: 1em;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(255,255,255,0.2);
-      transition: 0.3s;
-      z-index: 999;
-    }
-
-    #loginButton:hover { background: #ff4f4f; }
-
-    #loginBox {
-      display: none;
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      background: rgba(26,26,26,0.95);
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 0 10px rgba(255,255,255,0.2);
-      z-index: 1000;
-    }
-
-    #loginBox input { width: 100%; margin-bottom: 10px; }
-
-    #customButton {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: linear-gradient(90deg,#00ff7f,#00ffaa);
-      color: #000;
-      border: none;
-      padding: 12px 18px;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      box-shadow: 0 0 20px rgba(0,255,127,0.5);
-      transition: 0.3s;
-      z-index: 998;
-      display: none;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0% { box-shadow: 0 0 10px rgba(0,255,127,0.3); }
-      50% { box-shadow: 0 0 25px rgba(0,255,127,0.7); }
-      100% { box-shadow: 0 0 10px rgba(0,255,127,0.3); }
-    }
-  </style>
-</head>
-<body>
-  <div class="overlay"></div>
-  <header>LuxKickx.in</header>
-
-  <button id="loginButton" onclick="toggleLoginBox()">Admin</button>
-
-  <div id="loginBox">
-    <input type="password" id="adminPass" placeholder="Enter Password" />
-    <button onclick="checkPassword()">Login</button>
-  </div>
-
-  <div id="adminPanel">
-    <h3>🧠 Admin Panel</h3>
-    <input type="text" id="name" placeholder="Product Name" /><br />
-    <input type="text" id="price" placeholder="Price (₹)" /><br />
-    <input type="text" id="imgUrl" placeholder="Image URL" /><br />
-    <button onclick="addProduct()">Add Product</button>
-
-    <hr>
-    <h4>🎯 Floating Button</h4>
-    <input type="text" id="btnName" placeholder="Button Text" /><br />
-    <input type="text" id="btnLink" placeholder="Button Link" /><br />
-    <button onclick="saveButton()">Save Button</button>
-    <button style="background:#444;" onclick="removeButton()">Remove Button</button>
-  </div>
-
-  <button id="customButton">🎡 Spin & Win</button>
-  <div class="product-grid" id="productGrid"></div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCYxb2C9DaT_j_SjFwmKEPV9NBKGiShJxM",
-      authDomain: "luxkicx-7606f.firebaseapp.com",
-      databaseURL: "https://luxkicx-7606f-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "luxkicx-7606f",
-      storageBucket: "luxkicx-7606f.firebasestorage.app",
-      messagingSenderId: "109211508096",
-      appId: "1:109211508096:web:9c74e21f33dbf845fcb565"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const adminPassword = "QwEr12@#";
-    let isAdmin = false;
-
-    window.toggleLoginBox = () => {
-      const box = document.getElementById("loginBox");
-      box.style.display = box.style.display === "block" ? "none" : "block";
-    };
-
-    window.checkPassword = () => {
-      const pass = document.getElementById("adminPass").value;
-      if(pass === adminPassword){
-        isAdmin = true;
-        document.getElementById("loginButton").style.display = "none";
-        document.getElementById("loginBox").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-      } else alert("❌ Wrong password!");
-    };
-
-    window.addProduct = async () => {
-      const name = document.getElementById("name").value.trim();
-      const price = document.getElementById("price").value.trim();
-      const img = document.getElementById("imgUrl").value.trim();
-      if(!name || !price || !img) return alert("Fill all fields!");
-      await push(ref(db, "products"), { name, price, img });
-      alert("✅ Product added!");
-    };
-
-    window.saveButton = async () => {
-      const name = document.getElementById("btnName").value.trim();
-      const link = document.getElementById("btnLink").value.trim();
-      if(!name || !link) return alert("Fill both fields!");
-      await set(ref(db, "customButton"), { name, link });
-      alert("✅ Button saved!");
-    };
-
-    window.removeButton = async () => {
-      await remove(ref(db, "customButton"));
-      alert("🗑️ Floating button removed!");
-    };
-
-    onValue(ref(db, "customButton"), (snapshot) => {
-      const data = snapshot.val();
-      const btn = document.getElementById("customButton");
-      if(data && data.name && data.link){
-        btn.innerText = data.name;
-        btn.style.display = "block";
-        btn.onclick = () => window.open(data.link, "_blank");
-        document.getElementById("btnName").value = data.name;
-        document.getElementById("btnLink").value = data.link;
-      } else btn.style.display = "none";
-    });
-
-    const grid = document.getElementById("productGrid");
-    onValue(ref(db, "products"), (snapshot) => {
-      grid.innerHTML = "";
-      snapshot.forEach(child => {
-        const p = child.val();
-        const id = child.key;
-        const div = document.createElement("div");
-        div.className = "product";
-        div.innerHTML = `
-          <img src="${p.img}" alt="${p.name}" />
-          <h3>${p.name}</h3>
-          <p>₹${p.price}</p>
-          <button onclick="openProductPage('${id}')">Buy Now</button>
-          ${isAdmin ? `<button onclick="editProduct('${id}','${p.name}','${p.price}','${p.img}')">Edit</button>
-                       <button onclick="deleteProduct('${id}')">Delete</button>` : ""}
-        `;
-        grid.appendChild(div);
-      });
-    });
-
-    window.openProductPage = (id) => {
-      window.open(`product.html?id=${id}`, "_blank");
-    };
-
-    window.editProduct = (id, name, price, img) => {
-      const div = [...document.querySelectorAll(".product")].find(d => d.innerHTML.includes(`deleteProduct('${id}')`));
-      if(!div) return;
-      div.innerHTML = `
-        <input type="text" id="editName" value="${name}" placeholder="Product Name" /><br>
-        <input type="text" id="editPrice" value="${price}" placeholder="Price" /><br>
-        <input type="text" id="editImg" value="${img}" placeholder="Image URL" /><br>
-        <button onclick="saveEdit('${id}')">Save</button>
-        <button onclick="cancelEdit()">Cancel</button>
-      `;
-    };
-
-    window.saveEdit = async (id) => {
-      const name = document.getElementById("editName").value.trim();
-      const price = document.getElementById("editPrice").value.trim();
-      const img = document.getElementById("editImg").value.trim();
-      if(!name || !price || !img) return alert("Fill all fields!");
-      await update(ref(db, "products/" + id), { name, price, img });
-      alert("✅ Product updated!");
-    };
-
-    window.cancelEdit = () => location.reload();
-    window.deleteProduct = async (id) => {
-      if(!isAdmin) return;
-      await remove(ref(db, "products/" + id));
-      alert("🗑️ Product deleted!");
-    };
-  </script>
-</body>
-</html>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LuxKickx.in | Streetwear Cool Sneakers</title>
+<style>
+body {
+margin: 0;
+font-family: "Poppins", sans-serif;
+background: url('wallpaper.png') no-repeat center center fixed;
+background-size: cover;
+color: white;
+text-align: center;
+min-height: 100vh;
+}
+ .overlay {
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.7);
+backdrop-filter: blur(4px);
+z-index: -1;
+}
+header {
+background: rgba(0, 0, 0, 0.8);
+padding: 15px 0;
+font-size: 1.8em;
+font-weight: bold;
+color: #fff;
+letter-spacing: 1px;
+box-shadow: 0 0 15px rgba(255,255,255,0.2);
