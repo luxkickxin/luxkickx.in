@@ -87,14 +87,17 @@ progress{
 
 <header>LuxKickx.in</header>
 
+<!-- Admin Login Button -->
 <button id="loginButton" onclick="toggleLogin()">Admin</button>
 
+<!-- Admin Login Box -->
 <div id="loginBox">
   <input type="password" id="adminPwd" placeholder="Admin Password">
   <button onclick="adminLogin()">Login</button>
   <button onclick="adminLogout()">Logout</button>
 </div>
 
+<!-- Admin Panel -->
 <div id="adminPanel">
   <h3>Admin Panel</h3>
   <input id="nameInput" placeholder="Product Name">
@@ -104,6 +107,7 @@ progress{
   <button onclick="saveProduct()">Add / Update Product</button>
 </div>
 
+<!-- Product Grid -->
 <div class="product-grid" id="productGrid"></div>
 
 <script type="module">
@@ -129,7 +133,7 @@ const storage = getStorage(app);
 const ADMIN_PASSWORD = "albin@123";
 
 /* 📱 WhatsApp Number */
-const WHATSAPP_NUMBER = "919876543210"; // CHANGE THIS
+const WHATSAPP_NUMBER = "918606001706";
 
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 let editId = null;
@@ -140,54 +144,58 @@ const loginBox = document.getElementById("loginBox");
 const grid = document.getElementById("productGrid");
 const progress = document.getElementById("uploadProgress");
 
-if (isAdmin) adminPanel.style.display = "block";
+if(isAdmin) adminPanel.style.display="block";
 
-/* LOGIN */
+/* LOGIN TOGGLE */
 window.toggleLogin = () => {
   loginBox.style.display = loginBox.style.display === "block" ? "none" : "block";
 };
 
+/* ADMIN LOGIN */
 window.adminLogin = () => {
-  if (adminPwd.value === ADMIN_PASSWORD) {
+  if(document.getElementById("adminPwd").value === ADMIN_PASSWORD){
     isAdmin = true;
     localStorage.setItem("isAdmin","true");
-    adminPanel.style.display = "block";
-    loginBox.style.display = "none";
+    adminPanel.style.display="block";
+    loginBox.style.display="none";
     alert("Admin login success");
+    renderProducts();
   } else {
     alert("Wrong password");
   }
 };
 
+/* ADMIN LOGOUT */
 window.adminLogout = () => {
   isAdmin = false;
   localStorage.removeItem("isAdmin");
-  adminPanel.style.display = "none";
+  adminPanel.style.display="none";
+  renderProducts();
 };
 
 /* IMAGE COMPRESS */
 function compressImage(file){
   return new Promise(res=>{
-    const img=new Image();
-    img.src=URL.createObjectURL(file);
-    img.onload=()=>{
-      const c=document.createElement("canvas");
-      const s=Math.min(1,800/img.width);
-      c.width=img.width*s;
-      c.height=img.height*s;
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = ()=>{
+      const c = document.createElement("canvas");
+      const scale = Math.min(1,800/img.width);
+      c.width = img.width*scale;
+      c.height = img.height*scale;
       c.getContext("2d").drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=>res(b),"image/jpeg",0.75);
+      c.toBlob(b => res(b), "image/jpeg", 0.75);
     };
   });
 }
 
 /* SAVE PRODUCT */
-window.saveProduct = async ()=>{
+window.saveProduct = async () => {
   if(!isAdmin) return;
 
-  const name=nameInput.value.trim();
-  const price=priceInput.value.trim();
-  const file=imgFile.files[0];
+  const name = document.getElementById("nameInput").value.trim();
+  const price = document.getElementById("priceInput").value.trim();
+  const file = document.getElementById("imgFile").files[0];
 
   if(!name || !price || (!file && !editId)){
     alert("Fill all fields");
@@ -195,77 +203,85 @@ window.saveProduct = async ()=>{
   }
 
   let imageUrl = oldImage || "";
-  progress.style.display="block";
+  progress.style.display = "block";
 
   if(file){
-    const blob=await compressImage(file);
-    const imgRef=sRef(storage,"products/"+Date.now()+".jpg");
-    const task=uploadBytesResumable(imgRef,blob);
+    const blob = await compressImage(file);
+    const imgRef = sRef(storage,"products/"+Date.now()+".jpg");
+    const task = uploadBytesResumable(imgRef, blob);
 
-    task.on("state_changed",s=>{
-      progress.value=(s.bytesTransferred/s.totalBytes)*100;
+    task.on("state_changed", s => {
+      progress.value = (s.bytesTransferred/s.totalBytes)*100;
     });
 
     await task;
-    imageUrl=await getDownloadURL(imgRef);
+    imageUrl = await getDownloadURL(imgRef);
     if(oldImage){
-      try{await deleteObject(sRef(storage,oldImage));}catch{}
+      try{ await deleteObject(sRef(storage, oldImage)); } catch {}
     }
   }
 
   if(editId){
-    await set(ref(db,"products/"+editId),{name,price,img:imageUrl});
-    editId=null; oldImage=null;
-  }else{
-    await push(ref(db,"products"),{name,price,img:imageUrl});
+    await set(ref(db,"products/"+editId), {name, price, img:imageUrl});
+    editId = null; oldImage = null;
+  } else {
+    await push(ref(db,"products"), {name, price, img:imageUrl});
   }
 
-  progress.style.display="none";
-  progress.value=0;
-  nameInput.value=priceInput.value="";
-  imgFile.value="";
+  progress.style.display = "none";
+  progress.value = 0;
+  document.getElementById("nameInput").value = "";
+  document.getElementById("priceInput").value = "";
+  document.getElementById("imgFile").value = "";
 };
 
-/* DELETE */
-window.deleteProduct = async(id,img)=>{
+/* DELETE PRODUCT */
+window.deleteProduct = async (id,img) => {
   if(!isAdmin) return;
   if(!confirm("Delete product?")) return;
   await remove(ref(db,"products/"+id));
-  try{await deleteObject(sRef(storage,img));}catch{}
+  try{ await deleteObject(sRef(storage,img)); } catch {}
 };
 
-/* EDIT */
-window.editProduct = (id,p)=>{
-  editId=id;
-  oldImage=p.img;
-  nameInput.value=p.name;
-  priceInput.value=p.price;
+/* EDIT PRODUCT */
+window.editProduct = (id,p) => {
+  if(!isAdmin) return;
+  editId = id;
+  oldImage = p.img;
+  document.getElementById("nameInput").value = p.name;
+  document.getElementById("priceInput").value = p.price;
 };
 
-/* BUY */
-window.buyProduct = (name,price)=>{
+/* BUY PRODUCT */
+window.buyProduct = (name,price) => {
   const msg = encodeURIComponent(`Hi! I want to buy ${name} (₹${price})`);
   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,"_blank");
 };
 
-/* LOAD */
-onValue(ref(db,"products"),snap=>{
-  grid.innerHTML="";
-  snap.forEach(c=>{
-    const p=c.val();
-    grid.innerHTML+=`
-    <div class="product">
-      <img src="${p.img}">
-      <h3>${p.name}</h3>
-      <p>₹${p.price}</p>
-      <button onclick="buyProduct('${p.name}','${p.price}')">Buy Now</button>
-      ${isAdmin?
-      `<button onclick='editProduct("${c.key}",${JSON.stringify(p)})'>Edit</button>
-       <button onclick='deleteProduct("${c.key}","${p.img}")'>Delete</button>`:""}
-    </div>`;
+/* RENDER PRODUCTS */
+function renderProducts(){
+  onValue(ref(db,"products"), snap => {
+    grid.innerHTML = "";
+    snap.forEach(c => {
+      const p = c.val();
+      grid.innerHTML += `
+        <div class="product">
+          <img src="${p.img}">
+          <h3>${p.name}</h3>
+          <p>₹${p.price}</p>
+          <button onclick="buyProduct('${p.name}','${p.price}')">Buy Now</button>
+          ${isAdmin ? `
+          <button onclick='editProduct("${c.key}",${JSON.stringify(p)})'>Edit</button>
+          <button onclick='deleteProduct("${c.key}","${p.img}")'>Delete</button>` : ""}
+        </div>
+      `;
+    });
   });
-});
-</script>
+}
 
+// Initial Load
+renderProducts();
+
+</script>
 </body>
 </html>
